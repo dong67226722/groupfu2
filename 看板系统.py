@@ -18,11 +18,19 @@ def printMenu():
 	print("9.退出仓库看板系统")
 	print("="*60)
 
+def splitQrcd():
+	a = input("请扫描货物二维码：")
+	newName = a[16:27]
+	b = a.findr("-")
+	newPcb = a[29:b]
+	return newName
+	return newPcb
+	print(newName,"包装是：",newPcb)
+
 #定义新增品号函数
 def newInfo():
 	newQr = input("请扫描货物二维码：")
 	newName = input("请输入新入的品号信息：")
-	# newName = mid(newQr,1,6)
 	newSite = input("请输入存货位置信息：")
 	newNum = input("请输入入库数量信息：")
 	timea = time.time()
@@ -73,18 +81,22 @@ def ouTstock():
 		if tem['品号'] == stk:
 			print("%d   %s     %s     %s   %s    %s"%(j,tem['品号'],tem['位置'],tem['数量'],tem['时间'],tem['Qrcd']))
 			outx = stockPhs.index(tem)
-			if int(tem['数量']) <= sums and sums >= 0:
+			if int(tem['数量']) <= sums:
 				sums = sums -int(tem['数量'])
 				stockPhs.pop(outx)
-				continue
-			elif int(tem['数量']) > sums and sums >= 0:
+				if sums > 0:
+					j+=1
+					continue
+				else:
+					break
+			elif int(tem['数量']) > sums :
 				a = int(tem['数量']) -sums
+				sums == 0
 				if a > 0:
 					stockPhs[outx]['数量'] = str(a)
+					j+=1
 					break
-			elif sums == 0:
-				break
-			j+=1	
+			# j+=1	
 	print("品号----------出库完成！")
 
 #删除品号资料，扫描二维码输入
