@@ -64,30 +64,30 @@ def newInfo():
 	stockPh['stockID'] = newName
 	stockPh['Site'] = newSite
 	stockPh['Num.'] = newNum
-	stockPh['inTime'] = time.strftime("%Y--%m--%d %H:%M:%S",timeArray)
+	stockPh['inTime'] = time.strftime("%Y--%m--%d",timeArray)
 	stockPh['Qrcd'] = newQr
 	stockPhs.append(stockPh)
 
 #修改存货功能
 def modifInfo():
 	stoId = int(input("请输入需要修改存货序号："))
-	# newInfo()
 	newQr = input("请扫描货物二维码：")
 	newName = input("请输入新入的品号信息：")
 	newSite = input("请输入存货位置信息：")
 	newNum = input("请输入入库数量信息：")
+	newTime = input("请输入入库日期信息：")
 
 	stockPhs[stoId-1]['Qrcd'] = newQr 
 	stockPhs[stoId-1]['stockID'] = newName
 	stockPhs[stoId-1]['Site'] = newSite
 	stockPhs[stoId-1]['Num.'] = newNum
-
+	stockPhs[stoId-1]['inTime'] = newTime
 
 #位置查询存货功能
 def siteCx():
 
 	a = input("请输入查询存货位置：")
-	print("序号----品号-----------位置------数量----------入库时间----------------'Qrcd'")
+	print("序号----品号-----------位置------数量-------入库时间----------------'Qrcd'")
 	j = 1
 	for tem in stockPhs:
 		if tem['Site'] == a:
@@ -98,7 +98,7 @@ def ouTstock():
 	global stockPhs
 	stk = input("请输入要出库的品号：")
 	sums = int(input("请输入出库数量："))
-	print("序号----品号-----------位置------数量----------入库时间----------------'Qrcd'")
+	print("序号----品号-----------位置------数量-------入库时间----------------'Qrcd'")
 	ouTstocks = []
 	for tem in stockPhs:
 		if tem['stockID'] == stk and tem not in ouTstocks:
@@ -132,14 +132,14 @@ def delStock():
 			print("%s     %s     %s   %s    %s"%(tem['stockID'],tem['Site'],tem['Num.'],tem['inTime'],tem['Qrcd']))
 			outx = stockPhs.index(tem)
 			print("准备删除库存表第",int(outx) + 1,"序号库存!")
-		time.sleep(1)
+		# time.sleep(1)
 	stockPhs.pop(outx)
 	print("删除成功！")
 	
 #显示所有资料
 def prtAll():
 	print("*"*80)
-	print("序号----品号-----------位置------数量----------入库时间----------------'Qrcd'")
+	print("序号----品号-----------位置------数量-------入库时间----------------'Qrcd'")
 	print("*"*80)
 	Sites =[]
 	stockIDs = []
@@ -181,7 +181,7 @@ def recoverData():
 #品号查询
 def nameCx():
 	a = input("请输入查询品号：")
-	print("序号----品号-----------位置------数量----------入库时间----------------'Qrcd'")
+	print("序号----品号-----------位置------数量-------入库时间----------------'Qrcd'")
 	j = 1
 	sums = 0
 	for tem in stockPhs:
@@ -191,7 +191,37 @@ def nameCx():
 			sums = sums + int(tem['Num.'])
 
 	print("品号",a,"总库存是：",sums)
-	return sums
+	# return sums
+def stockDatecx():
+	stockDate = int(input("请输入要查询的库龄天数："))
+	print("*"*80)
+	print("序号----品号-----------位置------数量-------入库时间----------------'Qrcd'")
+	print("*"*80)
+
+	timea = time.time()
+	# nowTime = time.mktime(time.strptime(timea, '%Y-%m-%d'))
+	Sites = []
+	stockIDs = []
+	i = 1
+	sums = 0
+	for tem in stockPhs:
+		k = int(timea - time.mktime(time.strptime(tem['inTime'], '%Y--%m--%d')))/(24*60*60)
+		if k > stockDate:
+			print("%-4d    %-12s    %-6s   %-6s   %-22s   %-10s"%(i,tem['stockID'],tem['Site'],tem['Num.'],tem['inTime'],tem['Qrcd']))
+			a = tem['Site']
+			b = tem['stockID']
+			sums = sums + int(tem['Num.'])
+			i+=1
+			if a not in Sites:
+				Sites.append(a)
+			if b not in stockIDs:
+				stockIDs.append(b)
+		siteNum = len(Sites)
+		stockIDnum = len(stockIDs)
+	print("="*80)
+	print("目前库龄超过",stockDate,"天的占用板位是：",siteNum,"个板位！")
+	print("目前库龄超过",stockDate,"天的品号数是：",stockIDnum,"个品号！")
+	print("目前库龄超过",stockDate, "天的总库存量是：",sums, "pcs")
 
 
 # 主函数
@@ -224,7 +254,7 @@ def main():
 			ouTstock()
 			save2File()
 		elif key == "9":
-			pass
+			stockDatecx()
 		elif key == "0":
 			break
 	
