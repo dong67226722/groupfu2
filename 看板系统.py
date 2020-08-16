@@ -75,13 +75,13 @@ def modifInfo():
 	newName = input("请输入新入的品号信息：")
 	newSite = input("请输入存货位置信息：")
 	newNum = input("请输入入库数量信息：")
-	newTime = input("请输入入库日期信息：")
+	# newTime = input("请输入入库日期信息：")
 
 	stockPhs[stoId-1]['Qrcd'] = newQr 
 	stockPhs[stoId-1]['stockID'] = newName
 	stockPhs[stoId-1]['Site'] = newSite
 	stockPhs[stoId-1]['Num.'] = newNum
-	stockPhs[stoId-1]['inTime'] = newTime
+	# stockPhs[stoId-1]['inTime'] = newTime
 
 #位置查询存货功能
 def siteCx():
@@ -91,15 +91,19 @@ def siteCx():
 	j = 1
 	for tem in stockPhs:
 		if tem['Site'] == a:
-			print("%d   %s   %s  %s  %s  %s"%(j,tem['stockID'],tem['Site'],tem['Num.'],tem['inTime'],tem['Qrcd']))
+			print("%-4d    %-12s    %-6s   %-6s   %-22s   %-10s"%(j,tem['stockID'],tem['Site'],tem['Num.'],tem['inTime'],tem['Qrcd']))
 			j+=1
+
+
 #出库功能，待修改FIFO功能
 def ouTstock():
 	global stockPhs
+	orderNum = input("请输入订单号码：")
 	stk = input("请输入要出库的品号：")
 	sums = int(input("请输入出库数量："))
-	print("序号----品号-----------位置------数量-------入库时间----------------'Qrcd'")
+	# print("序号----品号-----------位置------数量-------入库时间----------------'Qrcd'")
 	ouTstocks = []
+	ouT2 = []
 	for tem in stockPhs:
 		if tem['stockID'] == stk and tem not in ouTstocks:
 			ouTstocks.append(tem)
@@ -110,19 +114,28 @@ def ouTstock():
 	adNum = len(ouT1)
 	for j in range(adNum):
 		if int(ouT1[j]['Num.']) <= sums:
+			ouT2.append(ouT1[j])
 			sums = sums - int(ouT1[j]['Num.'])
 			ouT1.pop(j)
 			j+=1
-			continue
+
 		elif int(ouT1[j]['Num.']) > sums:
+			ouT2.append(ouT1[j])
 			a = int(ouT1[j]['Num.']) - sums
 			sums = 0
 			if a > 0:
 				ouT1[j]['Num.'] = str(a)
-			break
-	print(ouT1)
+
+	print(ouT2)
+	time1 = time.time()
+	time2 =time.localtime(time1)
+	outTimes = time.strftime("%Y--%m--%d",time2)
+	file3 = codecs.open(orderNum + stk +"出库" + outTimes + ".txt", "w", "utf-8")
+	file3.write(str(ouT2))
+	file3.close()
 	for o in ouT1:
 		stockPhs.append(o)
+
 #删除品号资料，扫描二维码输入
 def delStock():
 	# global stockPhs
@@ -142,6 +155,7 @@ def prtAll():
 	print("序号----品号-----------位置------数量-------入库时间----------------'Qrcd'")
 	print("*"*80)
 	Sites =[]
+	Hjsites = []
 	stockIDs = []
 	a = None
 	b = None
@@ -153,15 +167,20 @@ def prtAll():
 		a = tem['Site']
 		b = tem['stockID']
 		i+=1
-		if a not in Sites:
+		if a not in Sites and "H" not in a:
 			Sites.append(a)
+		elif a not in Hjsites and "H" in a:
+			Hjsites.append(a)
 		if b not in stockIDs:
 			stockIDs.append(b)
 	siteNum = len(Sites)
+	hjsiteNum = len(Hjsites)
 	stockIDnum = len(stockIDs)
-	print("="*30)
+	print("="*60)
 	print("目前使用板位是：",siteNum,"个板位！总板位568个，剩余板位：",568-int(siteNum),"个板位！")
+	print("目前使用货架是：",hjsiteNum, "个货位！总货位480个，剩余板位：",480 - int(hjsiteNum),"个货位！")
 	print("目前在库品号数是：",stockIDnum,"个品号！")
+
 #存档数据
 def save2File():
 	file2 = codecs.open("stock.data","w","utf-8")
@@ -173,25 +192,30 @@ def recoverData():
 	f = codecs.open("stock.data","r","utf-8")
 	conte = f.read()
 	stockPhs = eval(conte)
-	# print(stockPhs)
 	f.close()
-
-
 
 #品号查询
 def nameCx():
-	a = input("请输入查询品号：")
-	print("序号----品号-----------位置------数量-------入库时间----------------'Qrcd'")
+	a = int(input("请选择查询方式: 1 是新QRcode全扫描输入查询，2 是键盘输入品号查询:"))
+	if a == 1:
+		# splitQrcd()
+		newQr = input("请扫描货物二维码：")
+		newName = newQr[16:27]
+		print("查询的品号是：",newName)
+	elif a == 2:
+		newName = input("请输入新入的品号信息：")
+	print("序号----品号------------位置-----数量-------入库时间----------------'Qrcd'")
 	j = 1
 	sums = 0
 	for tem in stockPhs:
-		if tem['stockID'] == a:
+		if tem['stockID'] == newName:
 			print("%-4d    %-12s    %-6s   %-6s   %-22s   %-10s"%(j,tem['stockID'],tem['Site'],tem['Num.'],tem['inTime'],tem['Qrcd']))
 			j+=1
 			sums = sums + int(tem['Num.'])
 
-	print("品号",a,"总库存是：",sums)
+	print("查询结果：品号",newName,"总库存是",sums,"pcs")
 	# return sums
+
 def stockDatecx():
 	stockDate = int(input("请输入要查询的库龄天数："))
 	print("*"*80)
@@ -216,8 +240,8 @@ def stockDatecx():
 				Sites.append(a)
 			if b not in stockIDs:
 				stockIDs.append(b)
-		siteNum = len(Sites)
-		stockIDnum = len(stockIDs)
+	siteNum = len(Sites)
+	stockIDnum = len(stockIDs)
 	print("="*80)
 	print("目前库龄超过",stockDate,"天的占用板位是：",siteNum,"个板位！")
 	print("目前库龄超过",stockDate,"天的品号数是：",stockIDnum,"个品号！")
