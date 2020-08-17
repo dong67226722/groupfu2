@@ -64,7 +64,7 @@ def newInfo():
 	stockPh['stockID'] = newName
 	stockPh['Site'] = newSite
 	stockPh['Num.'] = newNum
-	stockPh['inTime'] = time.strftime("%Y--%m--%d",timeArray)
+	stockPh['inTime'] = time.strftime("%Y-%m-%d %H:%M:%S",timeArray)
 	stockPh['Qrcd'] = newQr
 	stockPhs.append(stockPh)
 
@@ -75,7 +75,7 @@ def modifInfo():
 	newName = input("请输入新入的品号信息：")
 	newSite = input("请输入存货位置信息：")
 	newNum = input("请输入入库数量信息：")
-	# newTime = input("请输入入库日期信息：")
+	# newTime = input("请输入入库日期信息："%Y-%m-%d %H:%M:%S"")
 
 	stockPhs[stoId-1]['Qrcd'] = newQr 
 	stockPhs[stoId-1]['stockID'] = newName
@@ -95,42 +95,64 @@ def siteCx():
 			j+=1
 
 
-#出库功能，待修改FIFO功能
+#出库功能，待调整优化功能
 def ouTstock():
 	global stockPhs
 	orderNum = input("请输入订单号码：")
 	stk = input("请输入要出库的品号：")
-	sums = int(input("请输入出库数量："))
+	ouTsums = int(input("请输入出库数量："))
 	# print("序号----品号-----------位置------数量-------入库时间----------------'Qrcd'")
 	ouTstocks = []
 	ouT2 = []
+	sums = ouTsums
+	outxs = 0
+
 	for tem in stockPhs:
 		if tem['stockID'] == stk and tem not in ouTstocks:
 			ouTstocks.append(tem)
-			outx = stockPhs.index(tem)
-			stockPhs.pop(outx)
-	ouT1 = sorted(ouTstocks, key=lambda s: s['inTime'])
+			outxs = outxs + int(tem['Num.'])
+
+		stockPhs =[x for x in stockPhs if x['stockID'] != stk ]
+
+	print(stockPhs)
+	# if outxs < sums:
+	# 	print("老板！货库存不足了，要赶紧生产了！")
+
+	ouT1 = sorted(ouTstocks, key=lambda k_v: k_v['inTime'])
+	print(ouT1)
+	out1Nums = []
 	j = 0
-	adNum = len(ouT1)
-	for j in range(adNum):
+	while sums > 0:
 		if int(ouT1[j]['Num.']) <= sums:
-			ouT2.append(ouT1[j])
+			# ouT2.append(ouT1[j])
 			sums = sums - int(ouT1[j]['Num.'])
-			ouT1.pop(j)
-			j+=1
-
+			# ouT1.pop(j)
+			out1Nums.append(j)
+			j += 1
 		elif int(ouT1[j]['Num.']) > sums:
-			ouT2.append(ouT1[j])
+			# ouT2.append(ouT1[j])
 			a = int(ouT1[j]['Num.']) - sums
+			ouT1[j]['Num.'] = a
 			sums = 0
-			if a > 0:
-				ouT1[j]['Num.'] = str(a)
+			out1Nums.append(j)
+			j += 1
 
+	k = len(out1Nums)
+	for ot in out1Nums:
+		ouT2.append(ouT1[ot])
+	if k <= 1 and ouT1[0]['Num.'] > ouTsums:
+		pass
+	elif k <= 1 and ouT1[0]['Num.'] <= ouTsums:
+		del ouT1[0]
+	else:
+		del ouT1[0 : (k-1)]
+	print(ouT1)
 	print(ouT2)
+
 	time1 = time.time()
 	time2 =time.localtime(time1)
-	outTimes = time.strftime("%Y--%m--%d",time2)
-	file3 = codecs.open(orderNum + stk +"出库" + outTimes + ".txt", "w", "utf-8")
+	outTimes = time.strftime("%Y-%m-%d",time2)
+	file3 = codecs.open(orderNum +"-"+ stk +"出库" + outTimes +".txt", "w", "utf-8")
 	file3.write(str(ouT2))
 	file3.close()
 	for o in ouT1:
@@ -140,11 +162,12 @@ def ouTstock():
 def delStock():
 	# global stockPhs
 	stk = input("请输入要删除的品号Qrcd：")
+	print("品号-----------位置------数量-------入库时间----------------'Qrcd'")
 	for tem in stockPhs:
 		if tem['Qrcd'] == stk:
-			print("%s     %s     %s   %s    %s"%(tem['stockID'],tem['Site'],tem['Num.'],tem['inTime'],tem['Qrcd']))
+			print("%-12s    %-6s   %-6s   %-22s   %-10s"%(tem['stockID'],tem['Site'],tem['Num.'],tem['inTime'],tem['Qrcd']))
 			outx = stockPhs.index(tem)
-			print("准备删除库存表第",int(outx) + 1,"序号库存!")
+			print("准备删除库存表以上第",int(outx) + 1,"序号库存!")
 		# time.sleep(1)
 	stockPhs.pop(outx)
 	print("删除成功！")
@@ -229,7 +252,7 @@ def stockDatecx():
 	i = 1
 	sums = 0
 	for tem in stockPhs:
-		k = int(timea - time.mktime(time.strptime(tem['inTime'], '%Y--%m--%d')))/(24*60*60)
+		k = int(timea - time.mktime(time.strptime(tem['inTime'], '%Y-%m-%d %H:%M:%S')))/(24*60*60)
 		if k > stockDate:
 			print("%-4d    %-12s    %-6s   %-6s   %-22s   %-10s"%(i,tem['stockID'],tem['Site'],tem['Num.'],tem['inTime'],tem['Qrcd']))
 			a = tem['Site']
