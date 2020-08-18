@@ -3,6 +3,7 @@ import os
 import time
 import math
 import codecs
+import copy
 
 stockPhs = []
 #定义主界面显示函数
@@ -101,10 +102,9 @@ def ouTstock():
 	orderNum = input("请输入订单号码：")
 	stk = input("请输入要出库的品号：")
 	ouTsums = int(input("请输入出库数量："))
-	# print("序号----品号-----------位置------数量-------入库时间----------------'Qrcd'")
 	ouTstocks = []
-	ouT2 = []
-	sums = ouTsums
+	 # ouT2 = []
+	 # sums = copy.deepcopy(ouTsums)
 	outxs = 0
 
 	for tem in stockPhs:
@@ -112,51 +112,65 @@ def ouTstock():
 			ouTstocks.append(tem)
 			outxs = outxs + int(tem['Num.'])
 
-		stockPhs =[x for x in stockPhs if x['stockID'] != stk ]
+	# while outxs < ouTsums:
+	# 	print("=" * 80)
+	# 	print("老板！库存不足了，赶紧生产！")
+	# sleep(3)
 
-	print(stockPhs)
-	# if outxs < sums:
-	# 	print("老板！货库存不足了，要赶紧生产了！")
+	ouT2 = []
+	sums = copy.deepcopy(ouTsums)
+	stockPhs =[x for x in stockPhs if x['stockID'] != stk ]
+
 
 	ouT1 = sorted(ouTstocks, key=lambda k_v: k_v['inTime'])
-	print(ouT1)
+	outL1 = copy.deepcopy(ouT1)
+
 	out1Nums = []
 	j = 0
 	while sums > 0:
-		if int(ouT1[j]['Num.']) <= sums:
-			# ouT2.append(ouT1[j])
+	# for l,m in enumerate(ouT1):
+		if int(ouT1[j]['Num.']) <= int(sums):
 			sums = sums - int(ouT1[j]['Num.'])
-			# ouT1.pop(j)
 			out1Nums.append(j)
 			j += 1
-		elif int(ouT1[j]['Num.']) > sums:
-			# ouT2.append(ouT1[j])
-			a = int(ouT1[j]['Num.']) - sums
-			ouT1[j]['Num.'] = a
+		elif int(ouT1[j]['Num.']) >int(sums):
+			a = int(ouT1[j]['Num.']) -int(sums)
+			# ouT1[j]['Num.'] = str(a)
+			outL1[j]['Num.'] = str(int(sums))
 			sums = 0
 			out1Nums.append(j)
 			j += 1
 
-	k = len(out1Nums)
+
+
 	for ot in out1Nums:
-		ouT2.append(ouT1[ot])
-	if k <= 1 and ouT1[0]['Num.'] > ouTsums:
-		pass
-	elif k <= 1 and ouT1[0]['Num.'] <= ouTsums:
+		ouT2.append(outL1[ot])
+
+	k = len(out1Nums)
+
+	if k <= 1 and int(ouT1[0]['Num.']) > ouTsums:
+		ouT1[0]['Num.'] = str(a)
+	elif k <= 1 and int(ouT1[0]['Num.']) <= ouTsums:
 		del ouT1[0]
+		ouT1[k-1]['Num.'] = str(a)
 	else:
 		del ouT1[0 : (k-1)]
-	print(ouT1)
-	print(ouT2)
+		ouT1[ - 1]['Num.'] = str(a)
 
 	time1 = time.time()
 	time2 =time.localtime(time1)
 	outTimes = time.strftime("%Y-%m-%d",time2)
-	file3 = codecs.open(orderNum +"-"+ stk +"出库" + outTimes +".txt", "w", "utf-8")
+	file3 = codecs.open(orderNum +"-"+ stk +"出库" + outTimes +".csv", "w", "utf-8")
 	file3.write(str(ouT2))
 	file3.close()
 	for o in ouT1:
 		stockPhs.append(o)
+
+	otCode = ouT2[0]['Qrcd']
+	b = otCode.rfind("-")
+	newPcb = otCode[28:b]
+	print("=" * 80)
+	print("此批出库品号是：",stk,"出库件数是：",ouTsums/int(newPcb),"出库资讯：",ouT2)
 
 #删除品号资料，扫描二维码输入
 def delStock():
