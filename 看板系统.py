@@ -9,10 +9,11 @@ stockPhs = []
 #定义主界面显示函数
 def printMenu():
 	print("="*80)
-	print("群福塑胶制品有限公司仓库看板系统")
+	print("             群福塑胶制品有限公司仓库看板系统v01")
+	print("                                           ")
 	print("1.仓库入库功能")
 	print("2.修改仓库存货功能")
-	print("3.仓位查询存货功能")
+	print("3.储位查询及修改储位功能")
 	print("4.删除存货功能")
 	print("5.展示仓库存货品号信息")
 	print("6.存档功能")
@@ -26,10 +27,10 @@ def splitQrcd():
 	a = input("请扫描货物二维码：")
 	newName = a[16:27]
 	b = a.rfind("-")
-	newPcb = a[28:b]
+	newPcb = int(a[28:b])
 	return newName
 	return newPcb
-	# print(newName,"包装是：",newPcb)
+	print(newName,"包装是：",newPcb)
 
 def stockFifo():
 	pass
@@ -71,30 +72,57 @@ def newInfo():
 
 #修改存货功能
 def modifInfo():
-	stoId = int(input("请输入需要修改存货序号："))
-	newQr = input("请扫描货物二维码：")
-	newName = input("请输入新入的品号信息：")
-	newSite = input("请输入存货位置信息：")
-	newNum = input("请输入入库数量信息：")
-	# newTime = input("请输入入库日期信息："%Y-%m-%d %H:%M:%S"")
+	a = int(input("请选择修改方式, 1 是新QRcode全扫描输入，2 是键盘输入修改:"))
+	if a == 1:
+		stoId = int(input("请输入需要修改存货序号："))
+		newQr = input("请扫描货物二维码：")
+		newName = newQr[16:27]
+		b = newQr.rfind("-")
+		newPcb = newQr[28:b]
+		newCoton = int(input("请输入入库箱数："))
+		newSite = input("请输入存货位置信息：")
+		newNum = int(newPcb) * newCoton
+		print("此批修改入库资讯是：", "品号：", newName, "数量：", newNum, "位置是：", newSite)
+
+	elif a == 2:
+		stoId = int(input("请输入需要修改存货序号："))
+		newQr = input("请扫描货物二维码：")
+		newName = input("请输入新入的品号信息：")
+		newSite = input("请输入存货位置信息：")
+		newNum = input("请输入入库数量信息：")
+		newTime = input("请输入入库日期信息，格式%Y-%m-%d %H:%M:%S ：")
+		stockPhs[stoId - 1]['inTime'] = newTime
 
 	stockPhs[stoId-1]['Qrcd'] = newQr 
 	stockPhs[stoId-1]['stockID'] = newName
 	stockPhs[stoId-1]['Site'] = newSite
 	stockPhs[stoId-1]['Num.'] = newNum
-	# stockPhs[stoId-1]['inTime'] = newTime
+
 
 #位置查询存货功能
 def siteCx():
-
-	a = input("请输入查询存货位置：")
-	print("序号----品号-----------位置------数量-------入库时间----------------'Qrcd'")
-	j = 1
-	for tem in stockPhs:
-		if tem['Site'] == a:
-			print("%-4d    %-12s    %-6s   %-6s   %-22s   %-10s"%(j,tem['stockID'],tem['Site'],tem['Num.'],tem['inTime'],tem['Qrcd']))
-			j+=1
-
+	cx = int(input("请输入要执行的功能：1 查询储位存货信息，2 修改存货储位！"))
+	if cx == 1:
+		a = input("请输入查询存货位置：")
+		print("序号     品号           位置     数量         入库时间            'Qrcd'")
+		j = 1
+		for tem in stockPhs:
+			if tem['Site'] == a:
+				print("%-4d    %-12s    %-6s   %-6s   %-22s   %-10s"%(j,tem['stockID'],tem['Site'],tem['Num.'],tem['inTime'],tem['Qrcd']))
+				j+=1
+	elif cx == 2:
+		b = input("请扫描存货二维码：")
+		for tem in stockPhs:
+			if tem['Qrcd'] == str(b):
+				temNum = stockPhs.index(tem)
+				xgSite = input("请输入新的储位信息：")
+				stockPhs[int(temNum)]['Site'] = xgSite
+				print("调整储位到",xgSite,"完成！")
+			else:
+				pass
+		print("没有此存货信息！请重新选择功能")
+		# xgSite = input("请输入新的储位信息：")
+		# stockPhs[int(temNum)]['Site'] = xgSite
 
 #出库功能，待调整优化功能
 def ouTstock():
@@ -115,7 +143,7 @@ def ouTstock():
 	# while outxs < ouTsums:
 	# 	print("=" * 80)
 	# 	print("老板！库存不足了，赶紧生产！")
-	# sleep(3)
+	# 	break
 
 	ouT2 = []
 	sums = copy.deepcopy(ouTsums)
@@ -251,8 +279,8 @@ def nameCx():
 			sums = sums + int(tem['Num.'])
 
 	print("查询结果：品号",newName,"总库存是",sums,"pcs")
-	# return sums
 
+#库龄查询
 def stockDatecx():
 	stockDate = int(input("请输入要查询的库龄天数："))
 	print("*"*80)
@@ -302,6 +330,7 @@ def main():
 			save2File()
 		elif key == "3":
 			siteCx()
+			save2File()
 		elif key == "4":
 			delStock()
 			save2File()
