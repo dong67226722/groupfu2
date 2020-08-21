@@ -8,9 +8,9 @@ import copy
 stockPhs = []
 #定义主界面显示函数
 def printMenu():
-	print("="*80)
-	print("             群福塑胶制品有限公司仓库看板系统v01")
-	print("                                           ")
+	print("="*128)
+	print("      群福塑胶制品有限公司仓库看板系统v01")
+	print("                                               ")
 	print("1.仓库入库功能")
 	print("2.修改仓库存货功能")
 	print("3.储位查询及修改储位功能")
@@ -21,7 +21,8 @@ def printMenu():
 	print("8.出库管理功能")
 	print("9.存货库龄查询功能")
 	print("0.退出仓库看板系统")
-	print("="*80)
+	print("                                               ")
+	print("="*128)
 
 def splitQrcd():
 	a = input("请扫描货物二维码：")
@@ -32,9 +33,21 @@ def splitQrcd():
 	return newPcb
 	print(newName,"包装是：",newPcb)
 
-def stockFifo():
-	pass
-
+def stockOutcomde():
+	a = int(input("请选择出库方式, 1 是扫描输入出货资料，2 键盘输入出货资料:"))
+	if a == 1:
+		newComde = input("请扫描出货资料条形码：")
+		b = newComde.find("-")
+		c = newComde.rfind("-")
+		orderNum = newComde[0:b]
+		stk = newComde[(b+1):(b+11)]
+		ouTsums = int(newComde[(c+1):])
+		print("此批出库资讯是：", "品号：", stk, "数量：", ouTsums, "订单是：", orderNum)
+	elif a == 2:
+		orderNum = input("请输入订单号码：")
+		stk = input("请输入要出库的品号：")
+		ouTsums = int(input("请输入出库数量："))
+		print("此批出库资讯是：", "品号：", stk, "数量：", ouTsums, "订单是：", orderNum)
 
 
 
@@ -104,7 +117,7 @@ def siteCx():
 	cx = int(input("请输入要执行的功能：1 查询储位存货信息，2 修改存货储位！"))
 	if cx == 1:
 		a = input("请输入查询存货位置：")
-		print("序号     品号           位置     数量         入库时间            'Qrcd'")
+		print("序号----品号-----------位置------数量-------入库时间----------------'Qrcd'")
 		j = 1
 		for tem in stockPhs:
 			if tem['Site'] == a:
@@ -127,9 +140,24 @@ def siteCx():
 #出库功能，待调整优化功能
 def ouTstock():
 	global stockPhs
-	orderNum = input("请输入订单号码：")
-	stk = input("请输入要出库的品号：")
-	ouTsums = int(input("请输入出库数量："))
+	a = int(input("请选择出库方式, 1 是扫描输入出货资料，2 键盘输入出货资料:"))
+	if a == 1:
+		newComde = input("请扫描出货资料条形码：")
+		b = newComde.find("-")
+		c = newComde.rfind("-")
+		orderNum = newComde[0:b]
+		stk = newComde[(b + 1):(b + 12)]
+		ouTsums = int(newComde[(c + 1):])
+		print("此批出库资讯是：", "品号：", stk, "数量：", ouTsums, "订单是：", orderNum)
+	elif a == 2:
+		orderNum = input("请输入订单号码：")
+		stk = input("请输入要出库的品号：")
+		ouTsums = int(input("请输入出库数量："))
+		print("此批出库资讯是：", "品号：", stk, "数量：", ouTsums, "订单是：", orderNum)
+	# orderNum = input("请输入订单号码：")
+	# stk = input("请输入要出库的品号：")
+	# ouTsums = int(input("请输入出库数量："))
+
 	ouTstocks = []
 	 # ouT2 = []
 	 # sums = copy.deepcopy(ouTsums)
