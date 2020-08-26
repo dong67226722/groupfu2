@@ -139,6 +139,7 @@ def siteCx():
 
 #出库功能，待调整优化功能
 def ouTstock():
+	#两种出库方式，1扫描出库2是键盘输入
 	global stockPhs
 	a = int(input("请选择出库方式, 1 是扫描输入出货资料，2 键盘输入出货资料:"))
 	if a == 1:
@@ -158,6 +159,7 @@ def ouTstock():
 	# stk = input("请输入要出库的品号：")
 	# ouTsums = int(input("请输入出库数量："))
 
+	#计算符合条件的品号资料及总库存数量
 	ouTstocks = []
 	 # ouT2 = []
 	 # sums = copy.deepcopy(ouTsums)
@@ -185,6 +187,7 @@ def ouTstock():
 	j = 0
 	while sums > 0:
 	# for l,m in enumerate(ouT1):
+		# print(l,m)
 		if int(ouT1[j]['Num.']) <= int(sums):
 			sums = sums - int(ouT1[j]['Num.'])
 			out1Nums.append(j)
@@ -197,8 +200,6 @@ def ouTstock():
 			out1Nums.append(j)
 			j += 1
 
-
-
 	for ot in out1Nums:
 		ouT2.append(outL1[ot])
 
@@ -206,9 +207,12 @@ def ouTstock():
 
 	if k <= 1 and int(ouT1[0]['Num.']) > ouTsums:
 		ouT1[0]['Num.'] = str(a)
-	elif k <= 1 and int(ouT1[0]['Num.']) <= ouTsums:
+	elif k <= 1 and int(ouT1[0]['Num.']) == ouTsums:
 		del ouT1[0]
-		ouT1[k-1]['Num.'] = str(a)
+		# ouT1[k-1]['Num.'] = str(a)
+	elif k <= 1 and int(ouT1[0]['Num.']) < ouTsums:
+		del ouT1[0]
+		ouT1[k-1]['Num.'] = str(a)	
 	else:
 		del ouT1[0 : (k-1)]
 		ouT1[ - 1]['Num.'] = str(a)
@@ -226,7 +230,11 @@ def ouTstock():
 	b = otCode.rfind("-")
 	newPcb = otCode[28:b]
 	print("=" * 80)
-	print("此批出库品号是：",stk,"出库件数是：",ouTsums/int(newPcb),"出库资讯：",ouT2)
+	print("此批出库品号是：",stk,"出库件数是：",ouTsums/int(newPcb),"出库资讯：")
+	print("品号-----------位置------出库件数-------入库时间----------------'Qrcd'")
+	for tem in ouT2:
+		print("%-12s    %-6s   %-6d   %-22s   %-10s" % (
+		tem['stockID'], tem['Site'], int(tem['Num.']) / int(newPcb), tem['inTime'], tem['Qrcd']))
 
 #删除品号资料，扫描二维码输入
 def delStock():
