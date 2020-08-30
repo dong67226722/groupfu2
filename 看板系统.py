@@ -19,20 +19,19 @@ def printMenu():
 	print("6.存档功能")
 	print("7.品号查询存货功能")
 	print("8.出库管理功能")
-	print("9.存货库龄查询功能")
+	print("9.库龄查询及制令追溯查询功能")
 	print("0.退出仓库看板系统")
 	print("                                               ")
 	print("="*128)
-
+#扫描二维码拆分返回资料函数，可优化加入入库功能使用
 def splitQrcd():
 	a = input("请扫描货物二维码：")
 	newName = a[16:27]
 	b = a.rfind("-")
 	newPcb = int(a[28:b])
-	return newName
-	return newPcb
-	print(newName,"包装是：",newPcb)
-
+	return {'newName',newName,'newPcb',newPcb}
+	# print(newName,"包装是：",newPcb)
+#出库信息拆分函数，待加入出货函数使用
 def stockOutcomde():
 	a = int(input("请选择出库方式, 1 是扫描输入出货资料，2 键盘输入出货资料:"))
 	if a == 1:
@@ -51,7 +50,7 @@ def stockOutcomde():
 
 
 
-#定义新增品号函数
+#定义新增品号函数即是入库函数
 def newInfo():
 	a = int(input("请选择输入方式, 1 是新QRcode全扫描输入，2 是扫旧QRcode与键盘混合输入:"))
 	if a == 1:
@@ -137,9 +136,8 @@ def siteCx():
 		# xgSite = input("请输入新的储位信息：")
 		# stockPhs[int(temNum)]['Site'] = xgSite
 
-#出库功能，待调整优化功能
+#出库功能，自动记录订单出库追溯信息，所有订单出库资料全部存档可用于按制令追溯
 def ouTstock():
-	#两种出库方式，1扫描出库2是键盘输入
 	global stockPhs
 	a = int(input("请选择出库方式, 1 是扫描输入出货资料，2 键盘输入出货资料:"))
 	if a == 1:
@@ -159,7 +157,6 @@ def ouTstock():
 	# stk = input("请输入要出库的品号：")
 	# ouTsums = int(input("请输入出库数量："))
 
-	#计算符合条件的品号资料及总库存数量
 	ouTstocks = []
 	 # ouT2 = []
 	 # sums = copy.deepcopy(ouTsums)
@@ -187,7 +184,6 @@ def ouTstock():
 	j = 0
 	while sums > 0:
 	# for l,m in enumerate(ouT1):
-		# print(l,m)
 		if int(ouT1[j]['Num.']) <= int(sums):
 			sums = sums - int(ouT1[j]['Num.'])
 			out1Nums.append(j)
@@ -200,6 +196,8 @@ def ouTstock():
 			out1Nums.append(j)
 			j += 1
 
+
+
 	for ot in out1Nums:
 		ouT2.append(outL1[ot])
 
@@ -209,10 +207,9 @@ def ouTstock():
 		ouT1[0]['Num.'] = str(a)
 	elif k <= 1 and int(ouT1[0]['Num.']) == ouTsums:
 		del ouT1[0]
-		# ouT1[k-1]['Num.'] = str(a)
 	elif k <= 1 and int(ouT1[0]['Num.']) < ouTsums:
 		del ouT1[0]
-		ouT1[k-1]['Num.'] = str(a)	
+		ouT1[k - 1]['Num.'] = str(a)
 	else:
 		del ouT1[0 : (k-1)]
 		ouT1[ - 1]['Num.'] = str(a)
@@ -223,33 +220,71 @@ def ouTstock():
 	file3 = codecs.open(orderNum +"-"+ stk +"出库" + outTimes +".csv", "w", "utf-8")
 	file3.write(str(ouT2))
 	file3.close()
+
 	for o in ouT1:
 		stockPhs.append(o)
 
 	otCode = ouT2[0]['Qrcd']
 	b = otCode.rfind("-")
+
 	newPcb = otCode[28:b]
 	print("=" * 80)
 	print("此批出库品号是：",stk,"出库件数是：",ouTsums/int(newPcb),"出库资讯：")
 	print("品号-----------位置------出库件数-------入库时间----------------'Qrcd'")
-	for tem in ouT2:
-		print("%-12s    %-6s   %-6d   %-22s   %-10s" % (
-		tem['stockID'], tem['Site'], int(tem['Num.']) / int(newPcb), tem['inTime'], tem['Qrcd']))
+	global ouT3
+	ouT3 = []
+	if os.path.isfile("ouTstock.data"):
+		f2 = codecs.open("ouTstock.data", "r", "utf-8")
+		conte = f2.read()
+		ouT3 = eval(conte)
+		f2.close()
+	else:
+		file3 = codecs.open("stock.data","w","utf-8")
+		file3.close()
 
-#删除品号资料，扫描二维码输入
+	# f2 = codecs.open("ouTstock.data", "r", "utf-8")
+	# conte = f2.read()
+	# ouT3 = eval(conte)
+	# f2.close()
+
+	for tem in ouT2:
+		print("%-12s    %-6s   %-6d   %-22s   %-10s"%(tem['stockID'],tem['Site'],int(tem['Num.'])/int(newPcb),tem['inTime'],tem['Qrcd']))
+		tem['order'] = orderNum
+		ouT3.append(tem)
+
+	file5 = codecs.open("ouTstock.data", "w", "utf-8")
+	file5.write(str(ouT3))
+	file5.close()
+
+#删除品号资料，扫描二维码输入，序号删除，需要输入密码方可删除
 def delStock():
 	# global stockPhs
-	stk = input("请输入要删除的品号Qrcd：")
-	print("品号-----------位置------数量-------入库时间----------------'Qrcd'")
-	for tem in stockPhs:
-		if tem['Qrcd'] == stk:
-			print("%-12s    %-6s   %-6s   %-22s   %-10s"%(tem['stockID'],tem['Site'],tem['Num.'],tem['inTime'],tem['Qrcd']))
-			outx = stockPhs.index(tem)
-			print("准备删除库存表以上第",int(outx) + 1,"序号库存!")
-		# time.sleep(1)
-	stockPhs.pop(outx)
-	print("删除成功！")
-	
+	password = input("请输入删除密码：")
+	if password =="dong6722":
+		shanChu =int(input("请输入删除方式， 1 按品号Qrcd删除  2 按存货序号删除："))
+		if shanChu == 1:
+			stk = input("请输入要删除的品号Qrcd：")
+			print("品号-----------位置------数量-------入库时间----------------'Qrcd'")
+			for tem in stockPhs:
+				if tem['Qrcd'] == stk:
+					print("%-12s    %-6s   %-6s   %-22s   %-10s"%(tem['stockID'],tem['Site'],tem['Num.'],tem['inTime'],tem['Qrcd']))
+					outx = stockPhs.index(tem)
+					print("准备删除库存表以上第",int(outx) + 1,"序号库存!")
+				# time.sleep(1)
+					stockPhs.pop(outx)
+					print("删除成功！")
+		elif shanChu == 2:
+			stk2 = int(input("请输入要删除的存货序号："))
+			# j=1
+			# for tem in stockPhs:
+				# print("%-4d    %-12s    %-6s   %-6s   %-22s   %-10s" % (j, tem['stockID'], tem['Site'], tem['Num.'], tem['inTime'], tem['Qrcd']))
+				# j+=1
+			print("准备删除库存表以上第",stk2,"序号库存!")
+			stockPhs.pop(stk2-1)
+			print("删除成功！")
+	else:
+		pass
+
 #显示所有资料
 def prtAll():
 	print("*"*80)
@@ -268,7 +303,7 @@ def prtAll():
 		a = tem['Site']
 		b = tem['stockID']
 		i+=1
-		if a not in Sites and "H" not in a:
+		if a not in Sites and "H" not in a and "W" not in a:
 			Sites.append(a)
 		elif a not in Hjsites and "H" in a:
 			Hjsites.append(a)
@@ -290,21 +325,28 @@ def save2File():
 #读取文件
 def recoverData():
 	global stockPhs
-	f = codecs.open("stock.data","r","utf-8")
-	conte = f.read()
-	stockPhs = eval(conte)
-	f.close()
-
+	if os.path.isfile("stock.data"):
+		f = codecs.open("stock.data","r","utf-8")
+		conte = f.read()
+		if conte =="":
+			stockPhs = []
+		else:
+			stockPhs = eval(conte)
+		f.close()
+	else:
+		file2 = codecs.open("stock.data","w","utf-8")
+		file2.close()
+		stockPhs = []
 #品号查询
 def nameCx():
-	a = int(input("请选择查询方式: 1 是新QRcode全扫描输入查询，2 是键盘输入品号查询:"))
+	a = int(input("请选择查询方式: 1 是新QRcode全扫描输入查询，2 是键盘输入品号查询："))
 	if a == 1:
 		# splitQrcd()
 		newQr = input("请扫描货物二维码：")
 		newName = newQr[16:27]
 		print("查询的品号是：",newName)
 	elif a == 2:
-		newName = input("请输入新入的品号信息：")
+		newName = input("请输入查询的品号信息：")
 	print("序号----品号------------位置-----数量-------入库时间----------------'Qrcd'")
 	j = 1
 	sums = 0
@@ -314,53 +356,88 @@ def nameCx():
 			j+=1
 			sums = sums + int(tem['Num.'])
 
-	print("查询结果：品号",newName,"总库存是",sums,"pcs")
+	print("查询结果：品号", newName ,"总库存是",sums,"pcs")
 
-#库龄查询
+#库龄查询及制令追溯查询
 def stockDatecx():
-	stockDate = int(input("请输入要查询的库龄天数："))
-	print("*"*80)
-	print("序号----品号-----------位置------数量-------入库时间----------------'Qrcd'")
-	print("*"*80)
+	a = int(input("请选择查询方式: 1 库龄查询，2 是制令追溯查询："))
+	if a == 1:
+		stockDate = int(input("请输入要查询的库龄天数："))
+		print("*"*80)
+		print("序号----品号-----------位置------数量-------入库时间----------------'Qrcd'")
+		print("*"*80)
 
-	timea = time.time()
-	# nowTime = time.mktime(time.strptime(timea, '%Y-%m-%d'))
-	Sites = []
-	stockIDs = []
+		timea = time.time()
+		# nowTime = time.mktime(time.strptime(timea, '%Y-%m-%d'))
+		Sites = []
+		stockIDs = []
+		i = 1
+		sums = 0
+
+		for tem in stockPhs:
+			k = int(timea - time.mktime(time.strptime(tem['inTime'], '%Y-%m-%d %H:%M:%S')))/(24*60*60)
+			if k > stockDate:
+				print("%-4d    %-12s    %-6s   %-6s   %-22s   %-10s"%(i,tem['stockID'],tem['Site'],tem['Num.'],tem['inTime'],tem['Qrcd']))
+				a = tem['Site']
+				b = tem['stockID']
+				sums = sums + int(tem['Num.'])
+				i+=1
+				if a not in Sites:
+					Sites.append(a)
+				if b not in stockIDs:
+					stockIDs.append(b)
+		siteNum = len(Sites)
+		stockIDnum = len(stockIDs)
+		print("="*80)
+		print("目前库龄超过",stockDate,"天的占用板位是：",siteNum,"个板位！")
+		print("目前库龄超过",stockDate,"天的品号数是：",stockIDnum,"个品号！")
+		print("目前库龄超过",stockDate, "天的总库存量是：",sums, "pcs")
+	elif a == 2:
+		global ouT3
+		zhiling = input("请输入要查询的制令：")
+		f2 = codecs.open("ouTstock.data", "r", "utf-8")
+		conte = f2.read()
+		ouT3 = eval(conte)
+		f2.close()
+		print("品号----------出库位置---数量----------入库时间------------------'Qrcd'----------------------------'order'")
+		for tem in ouT3:
+			if tem['Qrcd'][0:15] == zhiling:
+				print("%-12s    %-6s   %-6s   %-22s   %-10s    %-10s" % (tem['stockID'], tem['Site'], tem['Num.'] , tem['inTime'], tem['Qrcd'],tem['order']))
+			else:
+				continue
+
+
+def passWord():
 	i = 1
-	sums = 0
-	for tem in stockPhs:
-		k = int(timea - time.mktime(time.strptime(tem['inTime'], '%Y-%m-%d %H:%M:%S')))/(24*60*60)
-		if k > stockDate:
-			print("%-4d    %-12s    %-6s   %-6s   %-22s   %-10s"%(i,tem['stockID'],tem['Site'],tem['Num.'],tem['inTime'],tem['Qrcd']))
-			a = tem['Site']
-			b = tem['stockID']
-			sums = sums + int(tem['Num.'])
-			i+=1
-			if a not in Sites:
-				Sites.append(a)
-			if b not in stockIDs:
-				stockIDs.append(b)
-	siteNum = len(Sites)
-	stockIDnum = len(stockIDs)
-	print("="*80)
-	print("目前库龄超过",stockDate,"天的占用板位是：",siteNum,"个板位！")
-	print("目前库龄超过",stockDate,"天的品号数是：",stockIDnum,"个品号！")
-	print("目前库龄超过",stockDate, "天的总库存量是：",sums, "pcs")
-
-
+	while i <= 3:
+		password = input("请输入登陆密码：")
+		if password !="dong6722":
+			i += 1
+			if i < 4:
+				print("密码错误，请重新输入，你还有",4-i ,"次机会！")
+				continue
+			else:
+				print("您无权限登陆，请联络系统管理员，谢谢使用！")
+				break
+		else:
+			print("登陆成功，欢迎使用GF看板系统！")
 # 主函数
 def main():
-#读取之前的数据
+	#读取之前的数据
 	recoverData()
 	while True:
 		printMenu()
-
 	#功能选择
 		key = input("请输入你要选择的功能的数字：")
 		if key == "1":
 			newInfo()
 			save2File()
+			while True:
+				if input("请确认是否继续入库: 0 退出，1 继续 ") == "1":
+					newInfo()
+					save2File()
+				else:
+					break
 		elif key == "2":
 			modifInfo()
 			save2File()
@@ -379,9 +456,14 @@ def main():
 		elif key == "8":
 			ouTstock()
 			save2File()
+			while True:
+				if input("请输入 1 继续出库, 0 退出出库界面：") == "1":
+					ouTstock()
+					save2File()
+				else:
+					break
 		elif key == "9":
 			stockDatecx()
 		elif key == "0":
 			break
-	
 main()
