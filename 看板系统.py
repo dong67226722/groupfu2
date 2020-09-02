@@ -88,8 +88,11 @@ def newInfo():
 def modifInfo():
 	a = int(input("请选择修改方式, 1 是新QRcode全扫描输入，2 是键盘输入修改:"))
 	if a == 1:
-		stoId = int(input("请输入需要修改存货序号："))
+		# stoId = int(input("请输入需要修改存货序号："))
 		newQr = input("请扫描货物二维码：")
+		for tem in stockPhs:
+			if tem['Qrcd'] == newQr:
+				temNum = stockPhs.index(tem)
 		newName = newQr[16:27]
 		b = newQr.rfind("-")
 		newPcb = newQr[28:b]
@@ -99,20 +102,23 @@ def modifInfo():
 		print("此批修改入库资讯是：", "品号：", newName, "数量：", newNum, "位置是：", newSite)
 
 	elif a == 2:
-		stoId = int(input("请输入需要修改存货序号："))
+		# stoId = int(input("请输入需要修改存货序号："))
 		newQr = input("请扫描货物二维码：")
+		for tem in stockPhs:
+			if tem['Qrcd'] == newQr:
+				temNum = stockPhs.index(tem)
 		newName = input("请输入新入的品号信息：")
 		newSite = input("请输入存货位置信息：")
 		newCoton = int(input("请输入入库箱数："))
 		newNum = input("请输入入库数量信息：")
 		newTime = input("请输入入库日期信息，格式%Y-%m-%d %H:%M:%S ：")
-		stockPhs[stoId - 1]['inTime'] = newTime
+		stockPhs[temNum]['inTime'] = newTime
 
-	stockPhs[stoId-1]['Qrcd'] = newQr 
-	stockPhs[stoId-1]['stockID'] = newName
-	stockPhs[stoId-1]['Site'] = newSite
-	stockPhs[stoId-1]['Num.'] = newNum
-	stockPhs[stoId-1]['coton'] = newCoton
+	stockPhs[temNum]['Qrcd'] = newQr
+	stockPhs[temNum]['stockID'] = newName
+	stockPhs[temNum]['Site'] = newSite
+	stockPhs[temNum]['Num.'] = newNum
+	stockPhs[temNum]['coton'] = newCoton
 
 #位置查询存货功能
 def siteCx():
@@ -217,8 +223,8 @@ def ouTstock():
 		ouT1[k - 1]['coton'] = int(a /int(newPcb))
 	else:
 		del ouT1[0 : (k-1)]
-		ouT1[ - 1]['Num.'] = str(a)
-		ouT1[-1]['coton'] = int(a /int(newPcb))
+		ouT1[0]['Num.'] = str(a)
+		ouT1[0]['coton'] = int(a /int(newPcb))
 
 	for o in ouT1:
 		stockPhs.append(o)
@@ -228,7 +234,7 @@ def ouTstock():
 	outTimes = time.strftime("%Y-%m-%d",time2)
 	for ot in ouT2:
 		ot['outtime'] = outTimes
-	print(ouT2)
+	
 	file3 = codecs.open(orderNum +"-"+ stk +"出库" + outTimes +".csv", "w", "utf-8")
 	file3.write(str(ouT2))
 	file3.close()
@@ -419,7 +425,7 @@ def stockDatecx():
 		conte = f5.read()
 		ouT3 = eval(conte)
 		f5.close()
-		print("品号----------出库位置---数量----箱数-----------入库时间------------------'Qrcd'----------------------------'order'--------出库日期")
+		print("品号----------出库位置---数量-----箱数----------入库时间------------------'Qrcd'----------------------------'order'-----------出库日期")
 		for tem in ouT3:
 			if str(tem['outtime']) == chukuRiqi:
 				print("%-12s    %-6s   %-6s  %-6s   %-22s   %-10s    %-10s    %-10s" % (tem['stockID'], tem['Site'], tem['Num.'] ,tem['coton'], tem['inTime'], tem['Qrcd'],tem['order'],str(tem['outtime'])))
